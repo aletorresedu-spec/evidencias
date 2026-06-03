@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosaico de Evidencias - USAER 38</title>
+    <!-- Tailwind CSS para diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuentes Premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,400&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        yuc_wine: '#851b3f',
+                        yuc_gold: '#bca374',
+                        yuc_cream: '#faf8f5',
+                        yuc_dark: '#2b2b2b'
+                    },
+                    fontFamily: {
+                        serif: ['Lora', 'serif'],
+                        sans: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Fondo con textura sutil de lienzo artístico */
+        .corkboard {
+            background-color: #f6f1ea;
+            background-image: radial-gradient(#e6dcd0 1.5px, transparent 0), radial-gradient(#e6dcd0 1.5px, transparent 0);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+        }
+
+        /* Estilo para las tarjetas de fotos limpias */
+        .photo-card {
+            background-color: #ffffff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+            padding: 8px;
+            border-radius: 4px;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+        }
+        
+        .photo-card:hover {
+            box-shadow: 0 14px 28px rgba(133, 27, 63, 0.15), 0 10px 10px rgba(133, 27, 63, 0.08);
+            transform: translateY(-4px) scale(1.02);
+            z-index: 40 !important;
+        }
+
+        /* Manejo táctil y cursor para arrastrar en modo interactivo */
+        .grab-handle {
+            cursor: grab;
+        }
+        .grab-handle:active {
+            cursor: grabbing;
+        }
+
+        /* Suavidad de transiciones de cambio de pestaña */
+        .view-transition {
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* Ocultar barra de scroll para una vista súper limpia */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-yuc_cream font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Encabezado Institucional Premium -->
+    <header class="bg-yuc_wine text-white relative py-5 px-6 shadow-md border-b-4 border-yuc_gold">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yuc_wine via-yuc_wine to-yuc_gold"></div>
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div>
+                <p class="text-[10px] tracking-widest text-yuc_gold font-bold uppercase mb-0.5">Renacimiento Maya • SEGEY • Dirección de Educación Especial</p>
+                <h1 class="text-xl md:text-2xl font-serif font-bold text-yuc_cream flex items-center gap-2">
+                    <i class="fa-solid fa-gallery-thumbnails text-yuc_gold"></i> 
+                    Galería Visual USAER 38
+                </h1>
+                <p class="text-xs text-gray-300">Escuela Secundaria Técnica #74 • Registro de Evidencias Sin Textos</p>
+            </div>
+            
+            <!-- Controles de Disposición de Galería -->
+            <div class="flex flex-wrap gap-1.5 bg-black bg-opacity-20 p-1 rounded-lg">
+                <button onclick="changeLayout('masonry')" id="btn-masonry" class="layout-btn bg-yuc_gold text-yuc_wine font-bold px-3 py-1.5 rounded text-xs shadow transition flex items-center gap-1">
+                    <i class="fa-solid fa-square-poll-horizontal rotate-90"></i> Mosaico
+                </button>
+                <button onclick="changeLayout('grid')" id="btn-grid" class="layout-btn bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-table-cells"></i> Rejilla
+                </button>
+                <button onclick="changeLayout('scatter')" id="btn-scatter" class="layout-btn bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-bold px-3 py-1.5 rounded text-xs transition flex items-center gap-1">
+                    <i class="fa-solid fa-hand-pointer"></i> Interactivo
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Barra de Filtros Rápidos -->
+    <section class="bg-white border-b border-gray-200 py-2.5 px-6 shadow-sm z-10">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto no-scrollbar">
+                <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wider whitespace-nowrap">Clasificación:</span>
+                <div class="flex gap-1" id="category-filters">
+                    <button onclick="filterCategory('todos')" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold bg-yuc_wine text-white transition whitespace-nowrap">Todas</button>
+                    <button onclick="filterCategory('Trabajo en Equipo')" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">Trabajo en Equipo</button>
+                    <button onclick="filterCategory('Taller Creativo')" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">Taller Creativo</button>
+                    <button onclick="filterCategory('Acompañamiento')" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition whitespace-nowrap">Acompañamiento</button>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="randomizeScatter()" id="shuffle-btn" class="hidden text-xs bg-gray-100 hover:bg-gray-200 text-yuc_wine font-bold px-2.5 py-1 rounded border border-gray-200 transition items-center gap-1">
+                    <i class="fa-solid fa-shuffle"></i> Mezclar
+                </button>
+                <button onclick="window.print()" class="text-xs bg-yuc_wine hover:bg-opacity-90 text-white font-bold px-2.5 py-1 rounded transition flex items-center gap-1">
+                    <i class="fa-solid fa-print"></i> Imprimir / PDF
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Área de Lienzo / Collage de Fotos -->
+    <main class="flex-grow p-4 md:p-8 corkboard relative overflow-hidden flex flex-col items-center min-h-[600px]">
+        
+        <!-- Consejos Interactivos dinámicos -->
+        <div id="drag-tip" class="hidden absolute top-4 left-1/2 -translate-x-1/2 bg-yuc_wine bg-opacity-95 text-white text-xs px-4 py-2 rounded-full shadow-lg z-50 flex items-center gap-2 font-medium transition-all duration-300">
+            <i class="fa-solid fa-hand-pointer animate-bounce text-yuc_gold"></i> Arrastra las imágenes libremente. Doble clic para traer al frente.
+        </div>
+
+        <!-- Contenedor Principal Ajustable -->
+        <div id="collage-canvas" class="w-full max-w-7xl relative min-h-[550px] view-transition">
+            <!-- Las fotos se renderizan dinámicamente aquí -->
+        </div>
+    </main>
+
+    <!-- Pie de Página Institucional -->
+    <footer class="bg-white border-t border-gray-200 py-3 px-6 text-center text-[10px] text-gray-500 font-medium z-10">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>Yucatán • Renacimiento Maya (2024-2030)</span>
+            <span class="text-yuc_wine font-bold">Unidad de Apoyo a la Educación Regular N° 38 • Secundaria Técnica #74</span>
+        </div>
+    </footer>
+
+    <!-- Visor de Imagen Ampliada (Lightbox) -->
+    <div id="lightbox" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex flex-col justify-center items-center p-4" onclick="closeLightbox()">
+        <button class="absolute top-4 right-4 text-white text-3xl hover:text-yuc_gold transition">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="max-w-4xl max-h-[85vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="" alt="Vista ampliada" class="max-w-full max-h-[80vh] rounded shadow-2xl object-contain border border-neutral-800">
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
+                <button onclick="navigateLightbox(-1)" class="bg-white bg-opacity-10 hover:bg-opacity-25 text-white px-4 py-2 rounded-full transition"><i class="fa-solid fa-arrow-left"></i></button>
+                <button onclick="navigateLightbox(1)" class="bg-white bg-opacity-10 hover:bg-opacity-25 text-white px-4 py-2 rounded-full transition"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Datos e Interacción -->
+    <script>
+        // Catálogo Completo de las 26 Imágenes Proporcionadas
+        const imageDatabase = [
+            { src: "WhatsApp Image 2026-06-03 at 10.00.25 AM (1).jpeg", category: "Trabajo en Equipo", rotation: -2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.25 AM.jpeg", category: "Trabajo en Equipo", rotation: 3 },
+            { src: "WhatsApp Image 2026-06-03 at 10.16.27 AM (2).jpeg", category: "Taller Creativo", rotation: -1.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.16.27 AM.jpeg", category: "Acompañamiento", rotation: 2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.16.27 AM (1).jpeg", category: "Acompañamiento", rotation: -3 },
+            { src: "WhatsApp Image 2026-06-03 at 10.16.28 AM.jpeg", category: "Taller Creativo", rotation: 1 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.57 AM (1).jpeg", category: "Acompañamiento", rotation: 4 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.57 AM.jpeg", category: "Taller Creativo", rotation: -2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.56 AM (1).jpeg", category: "Trabajo en Equipo", rotation: 2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.56 AM.jpeg", category: "Taller Creativo", rotation: -3.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.55 AM.jpeg", category: "Acompañamiento", rotation: 1.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.54 AM.jpeg", category: "Taller Creativo", rotation: -1 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.52 AM (1).jpeg", category: "Trabajo en Equipo", rotation: 3 },
+            { src: "WhatsApp Image 2026-06-03 at 10.10.52 AM.jpeg", category: "Trabajo en Equipo", rotation: -4 },
+            { src: "WhatsApp Image 2026-06-03 at 10.08.39 AM.jpeg", category: "Trabajo en Equipo", rotation: 2.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.08.38 AM.jpeg", category: "Trabajo en Equipo", rotation: -3 },
+            { src: "WhatsApp Image 2026-06-03 at 10.08.37 AM.jpeg", category: "Acompañamiento", rotation: 1.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.39 AM.jpeg", category: "Acompañamiento", rotation: -2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.35 AM.jpeg", category: "Trabajo en Equipo", rotation: 3.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.34 AM (2).jpeg", category: "Acompañamiento", rotation: -1.5 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.34 AM (1).jpeg", category: "Trabajo en Equipo", rotation: 2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.34 AM.jpeg", category: "Acompañamiento", rotation: -3 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.33 AM.jpeg", category: "Taller Creativo", rotation: 4 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.32 AM.jpeg", category: "Taller Creativo", rotation: -2 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.27 AM.jpeg", category: "Taller Creativo", rotation: 1 },
+            { src: "WhatsApp Image 2026-06-03 at 10.00.26 AM.jpeg", category: "Trabajo en Equipo", rotation: -4 }
+        ];
+
+        let currentLayout = 'masonry'; // 'masonry', 'grid', 'scatter'
+        let currentFilter = 'todos';
+        let highestZIndex = 30;
+        let activeIndex = 0;
+        let filteredList = [];
+
+        // Inicializar collage en carga de documento
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCollage();
+        });
+
+        // Cambiar categoría activa
+        function filterCategory(category) {
+            currentFilter = category;
+            
+            // Estilizar botón activo
+            document.querySelectorAll('#category-filters button').forEach(btn => {
+                btn.classList.remove('bg-yuc_wine', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            event.target.classList.remove('bg-gray-100', 'text-gray-600');
+            event.target.classList.add('bg-yuc_wine', 'text-white');
+
+            renderCollage();
+            if (currentLayout === 'scatter') {
+                randomizeScatter();
+            }
+        }
+
+        // Cambiar disposición visual
+        function changeLayout(layout) {
+            currentLayout = layout;
+
+            // Actualizar botones de la barra superior
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('bg-yuc_gold', 'text-yuc_wine');
+                btn.classList.add('bg-transparent', 'text-white', 'hover:bg-white', 'hover:bg-opacity-10');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${layout}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-transparent', 'text-white', 'hover:bg-white', 'hover:bg-opacity-10');
+                activeBtn.classList.add('bg-yuc_gold', 'text-yuc_wine');
+            }
+
+            // Opciones de visibilidad específicas
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            const dragTip = document.getElementById('drag-tip');
+            if (layout === 'scatter') {
+                shuffleBtn.classList.remove('hidden');
+                shuffleBtn.classList.add('inline-flex');
+                dragTip.classList.remove('hidden');
+            } else {
+                shuffleBtn.classList.add('hidden');
+                shuffleBtn.classList.remove('inline-flex');
+                dragTip.classList.add('hidden');
+            }
+
+            renderCollage();
+        }
+
+        // Motor de Renderización Adaptativa
+        function renderCollage() {
+            const canvas = document.getElementById('collage-canvas');
+            canvas.innerHTML = '';
+
+            // Filtrado de las 26 imágenes
+            filteredList = currentFilter === 'todos' 
+                ? imageDatabase 
+                : imageDatabase.filter(img => img.category === currentFilter);
+
+            // Reiniciar clases de cuadrícula en el contenedor canvas
+            canvas.className = 'w-full max-w-7xl relative view-transition';
+            
+            if (currentLayout === 'masonry') {
+                canvas.classList.add('columns-1', 'sm:columns-2', 'md:columns-3', 'lg:columns-4', 'gap-4', 'space-y-4');
+                renderMasonryLayout(canvas);
+            } else if (currentLayout === 'grid') {
+                canvas.classList.add('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5', 'gap-4');
+                renderGridLayout(canvas);
+            } else if (currentLayout === 'scatter') {
+                canvas.classList.add('min-h-[700px]', 'w-full');
+                renderScatterLayout(canvas);
+            }
+        }
+
+        // Modo Mosaico (Pinterest Masonry) - Súper fluido
+        function renderMasonryLayout(container) {
+            filteredList.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'break-inside-avoid photo-card cursor-pointer flex flex-col mb-4 relative group overflow-hidden border border-neutral-100';
+                card.onclick = () => openLightbox(index);
+
+                card.innerHTML = `
+                    <div class="overflow-hidden rounded">
+                        <img src="${item.src}" alt="USAER 38 Evidencia" class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Modo Rejilla Uniforme y Limpia
+        function renderGridLayout(container) {
+            filteredList.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'photo-card cursor-pointer flex flex-col aspect-square relative group overflow-hidden border border-neutral-100';
+                card.onclick = () => openLightbox(index);
+
+                card.innerHTML = `
+                    <div class="w-full h-full overflow-hidden rounded bg-gray-50">
+                        <img src="${item.src}" alt="USAER 38 Evidencia" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Modo Lienzo Interactivo con Posicionamiento Libre (Draggable)
+        function renderScatterLayout(container) {
+            filteredList.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'photo-card draggable-card grab-handle absolute select-none border border-neutral-200';
+                card.style.width = '200px';
+                
+                // Rotaciones aleatorias sutiles
+                const angle = (Math.random() * 16) - 8;
+                card.style.transform = `rotate(${angle}deg)`;
+                card.dataset.rotation = angle;
+                
+                // Dispersión espacial balanceada en el canvas
+                const cols = Math.min(filteredList.length, 5);
+                const colIndex = index % cols;
+                const rowIndex = Math.floor(index / cols);
+                
+                const leftPos = 40 + colIndex * 220 + (Math.random() * 30 - 15);
+                const topPos = 40 + rowIndex * 200 + (Math.random() * 30 - 15);
+                
+                card.style.left = `${leftPos}px`;
+                card.style.top = `${topPos}px`;
+                card.style.zIndex = index + 1;
+
+                card.innerHTML = `
+                    <div class="w-full aspect-[4/3] bg-gray-200 overflow-hidden rounded pointer-events-none">
+                        <img src="${item.src}" alt="USAER 38 Evidencia" class="w-full h-full object-cover">
+                    </div>
+                `;
+
+                // Interacción de capas al hacer doble clic (Traer al frente)
+                card.addEventListener('dblclick', () => {
+                    highestZIndex++;
+                    card.style.zIndex = highestZIndex;
+                    card.classList.add('scale-110');
+                    setTimeout(() => card.classList.remove('scale-110'), 200);
+                });
+
+                // Distinguir click simple para expandir y arrastre
+                let touchTime = 0;
+                card.addEventListener('pointerdown', () => touchTime = Date.now());
+                card.addEventListener('pointerup', () => {
+                    if (Date.now() - touchTime < 200) { 
+                        openLightbox(index);
+                    }
+                });
+
+                container.appendChild(card);
+            });
+            
+            initDragAndDrop();
+        }
+
+        // Mezclar posiciones en Lienzo Libre de forma aleatoria
+        function randomizeScatter() {
+            const cards = document.querySelectorAll('.draggable-card');
+            cards.forEach(card => {
+                const angle = (Math.random() * 20) - 10;
+                card.style.transform = `rotate(${angle}deg)`;
+                card.dataset.rotation = angle;
+                
+                const canvas = document.getElementById('collage-canvas');
+                const maxX = canvas.clientWidth - 220;
+                const maxY = Math.max(500, canvas.clientHeight - 240);
+
+                const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+                const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+
+                card.style.left = `${randomX}px`;
+                card.style.top = `${randomY}px`;
+            });
+        }
+
+        // Sistema Drag & Drop robusto (Mouse y Touch)
+        function initDragAndDrop() {
+            const cards = document.querySelectorAll('.draggable-card');
+            cards.forEach(card => {
+                let isDragging = false;
+                let startX, startY;
+                let elemLeft, elemTop;
+
+                card.addEventListener('pointerdown', e => {
+                    if (currentLayout !== 'scatter') return;
+                    isDragging = true;
+                    card.setPointerCapture(e.pointerId);
+                    
+                    highestZIndex++;
+                    card.style.zIndex = highestZIndex;
+
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    elemLeft = parseInt(card.style.left) || 0;
+                    elemTop = parseInt(card.style.top) || 0;
+                    
+                    card.classList.remove('transition-all');
+                    card.style.transform = `rotate(${card.dataset.rotation}deg) scale(1.06)`;
+                });
+
+                card.addEventListener('pointermove', e => {
+                    if (!isDragging) return;
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+
+                    card.style.left = `${elemLeft + dx}px`;
+                    card.style.top = `${elemTop + dy}px`;
+                });
+
+                card.addEventListener('pointerup', e => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    card.releasePointerCapture(e.pointerId);
+                    card.style.transform = `rotate(${card.dataset.rotation}deg) scale(1)`;
+                });
+            });
+        }
+
+        // Funciones del Visor Ampliado (Lightbox)
+        function openLightbox(index) {
+            activeIndex = index;
+            const item = filteredList[activeIndex];
+            if (!item) return;
+
+            document.getElementById('lightbox-img').src = item.src;
+            
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+        }
+
+        // Navegación secuencial dentro del Lightbox
+        function navigateLightbox(direction) {
+            activeIndex += direction;
+            if (activeIndex < 0) {
+                activeIndex = filteredList.length - 1;
+            } else if (activeIndex >= filteredList.length) {
+                activeIndex = 0;
+            }
+            
+            const item = filteredList[activeIndex];
+            if (item) {
+                document.getElementById('lightbox-img').src = item.src;
+            }
+        }
+
+        // Atajos de teclado (Escape y Flechas de dirección)
+        document.addEventListener('keydown', e => {
+            const lightbox = document.getElementById('lightbox');
+            if (lightbox.classList.contains('flex')) {
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                } else if (e.key === 'ArrowRight') {
+                    navigateLightbox(1);
+                } else if (e.key === 'ArrowLeft') {
+                    navigateLightbox(-1);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
